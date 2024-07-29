@@ -82,22 +82,6 @@ print(train_multi[train_multi.isnull().any(axis=1)])
 # train_0.dropna(inplace=True)
 # train_multi.dropna(inplace=True)
 
-# Train random forest models on direction of effects
-# Make three binary training tasks
-
-# Negative
-rf_neg = RandomForestClassifier(n_estimators=500)
-rf_neg.fit(train_multi.iloc[:, :-3], train_multi['neg'])
-
-# Positive
-rf_pos = RandomForestClassifier(n_estimators=500)
-rf_pos.fit(train_multi.iloc[:, :-3], train_multi['pos'])
-
-# None
-rf_no = RandomForestClassifier(n_estimators=500)
-rf_no.fit(train_multi.iloc[:, :-3], train_multi['no'])
-print('Training done')
-
 # Load test data
 test_0 = pd.read_csv('data/test_all_RegDB.txt', sep='\t')
 test = test_0.iloc[:, 6:]
@@ -129,6 +113,25 @@ test_multi = pd.concat([test, ds_test, ds_fun_test], axis=1)
 # Replace NaN with 0
 test_multi.fillna(0, inplace=True)
 
+test_multi.head()
+test_multi.columns
+
+# Train random forest models on direction of effects
+# Make three binary training tasks
+
+# Negative
+rf_neg = RandomForestClassifier(n_estimators=500)
+rf_neg.fit(train_multi.iloc[:, :-3], train_multi['neg'])
+
+# Positive
+rf_pos = RandomForestClassifier(n_estimators=500)
+rf_pos.fit(train_multi.iloc[:, :-3], train_multi['pos'])
+
+# None
+rf_no = RandomForestClassifier(n_estimators=500)
+rf_no.fit(train_multi.iloc[:, :-3], train_multi['no'])
+print('Training done')
+
 # Get probability of positive prediction for each binary classification
 pred_neg = rf_neg.predict_proba(test_multi)[:, 1]
 pred_pos = rf_pos.predict_proba(test_multi)[:, 1]
@@ -147,7 +150,7 @@ pred['prob'] = pred[['pos', 'neg', 'no']].max(axis=1)
 # Convert no, pos, neg to 0, 1, -1
 pred.loc[pred['label']=='no', 'label'] = 0
 pred.loc[pred['label']=='pos', 'label'] = 1
-pred.loc[pred['label']=='no=eg', 'label'] = -1
+pred.loc[pred['label']=='neg', 'label'] = -1
 
 # Train random forest model on confidence scores
 rf = RandomForestRegressor(n_estimators=500)
@@ -169,8 +172,12 @@ pred.loc[(pred['label']==0)&(pred['neg']>=pred['pos']), 'effect'] = pred.loc[(pr
 pred.loc[(pred['label']==0)&(pred['neg']<pred['pos']), 'effect'] = 1 - pred.loc[(pred['label']==0)&(pred['neg']<pred['pos']), 'no']
 pred['effect'] = pred['effect'].apply(lambda x: np.round(x, 3))
 
+# Add identifying info
+pred_long = pd.concat([ds_test_0.iloc[:, :5], pred], axis=1)
+
 # Save as csv
 pred.to_csv('results/rf_pred.csv')
+pred_long.to_csv('results/rf_pred_details.csv')
 
 print(train_0.head(1))
 print(test_0.head(1))
