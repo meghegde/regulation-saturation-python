@@ -1,5 +1,0 @@
-Steps for running DNABERT-2 with CAGI5 MPRA data:
-1. Read in data as per Enformer: https://github.com/google-deepmind/deepmind-research/blob/master/enformer/enformer-usage.ipynb.
-2. Put data into 'sequence, label' csv format as described in section 6.2: https://github.com/MAGICS-LAB/DNABERT_2/tree/main.
-3. Install required packages in 'dna' conda environment.
-4. Put together code as described in the DNABERT-2 GitHub repository README.
